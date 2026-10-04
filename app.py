@@ -86,11 +86,11 @@ else:
         return f"{rank}位"
 
     df_summary['ランク'] = (df_summary.index + 1).map(get_medal)
-    # 確実に小数点第1位まで表示されるようにフォーマット
-    df_summary['Rating'] = df_summary['Rating'].map(lambda x: f"{x:.1f}")
-    df_summary['HighestRating'] = df_summary['HighestRating'].map(lambda x: f"{x:.1f}")
+    # 整数（四捨五入）でスッキリ表示するようにフォーマット
+    df_summary['Rating'] = df_summary['Rating'].map(lambda x: f"{int(round(x))}")
+    df_summary['HighestRating'] = df_summary['HighestRating'].map(lambda x: f"{int(round(x))}")
     # トレンド（直近の変動）を見やすくフォーマット
-    df_summary['LastDelta'] = df_summary['LastDelta'].map(lambda x: f"📈 +{x:.1f}" if x > 0 else (f"📉 {x:.1f}" if x < 0 else "➖ 0.0"))
+    df_summary['LastDelta'] = df_summary['LastDelta'].map(lambda x: f"📈 +{int(round(x))}" if x > 0 else (f"📉 {int(round(x))}" if x < 0 else "➖ 0"))
     
     # 1画面に縦並びで表示
     st.subheader("🏆 総合レーティングランキング")
@@ -146,12 +146,12 @@ else:
         cols = st.columns(len(top_gainers))
         for i, (_, row) in enumerate(top_gainers.iterrows()):
             with cols[i]:
-                st.metric(label=row['Player'], value=f"{row['NewRating']:.1f}", delta=f"{row['DeltaRating']:.1f}")
+                st.metric(label=row['Player'], value=f"{int(round(row['NewRating']))}", delta=f"{int(round(row['DeltaRating']))}")
         
         show_cols = ['Player', 'FinalChips', 'ActualShare(%)', 'DeltaRating']
         disp = latest_game[show_cols].sort_values('DeltaRating', ascending=False).copy()
         disp['ActualShare(%)'] = disp['ActualShare(%)'].round(1).astype(str) + "%"
-        disp['DeltaRating'] = disp['DeltaRating'].map(lambda x: f"📈 +{x:.1f}" if x > 0 else (f"📉 {x:.1f}" if x < 0 else "➖ 0.0"))
+        disp['DeltaRating'] = disp['DeltaRating'].map(lambda x: f"📈 +{int(round(x))}" if x > 0 else (f"📉 {int(round(x))}" if x < 0 else "➖ 0"))
         disp = disp.rename(columns={'Player': 'プレイヤー', 'FinalChips': '最終チップ', 'ActualShare(%)': 'チップ占有率', 'DeltaRating': 'レート変動'})
         
         st.dataframe(
