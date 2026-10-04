@@ -124,27 +124,51 @@ else:
     st.subheader("📈 レート推移")
     if not df_history.empty:
         import altair as alt
-        hist = df_history.copy()
-        hist['Game'] = hist['Date'].astype(str) + " (R" + hist['Round'].astype(str) + ")"
-        game_order = ["開始"] + list(dict.fromkeys(hist['Game']))
         
-        chart_data = hist.pivot_table(index='Game', columns='Player', values='NewRating', aggfunc='last')
-        start_row = pd.DataFrame({p: [INITIAL_RATING] for p in chart_data.columns}, index=["開始"])
-        chart_data = pd.concat([start_row, chart_data]).reindex(game_order).ffill()
+        # 全プレイヤーのリスト（ランキング順）
+        all_players = df_summary['Player'].tolist()
         
-        # Altair描画用にデータを変形
-        df_chart = chart_data.reset_index().melt(id_vars='index', var_name='Player', value_name='Rating')
-        df_chart = df_chart.rename(columns={'index': 'Game'})
+        # プレイヤー絞り込み機能（デフォルトは上位5名）
+        selected_players = st.multiselect(
+            "グラフに表示するプレイヤーを選択（デフォルトは上位5名）",
+            options=all_players,
+            default=all_players[:5] if len(all_players) > 5 else all_players
+        )
         
-        # グラフの設定（X軸をgame_orderの通りに強制ソート）
-        chart = alt.Chart(df_chart).mark_line(point=True).encode(
-            x=alt.X('Game:O', sort=game_order, title="ゲーム (日付とラウンド)", axis=alt.Axis(labelAngle=-45)),
-            y=alt.Y('Rating:Q', scale=alt.Scale(zero=False), title="レート"),
-            color=alt.Color('Player:N', legend=alt.Legend(title="プレイヤー")),
-            tooltip=['Game', 'Player', alt.Tooltip('Rating:Q', format='.0f')]
-        ).interactive()
-        
-        st.altair_chart(chart, use_container_width=True)
+        if not selected_players:
+            st.info("プレイヤーを選択してください。")
+        else:
+            hist = df_history.copy()
+            hist['Game'] = hist['Date'].astype(str) + " (R" + hist['Round'].astype(str) + ")"
+            game_order = ["開始"] + list(dict.fromkeys(hist['Game']))
+            
+            # 選択されたプレイヤーのデータだけを抽出
+            chart_data = hist.pivot_table(index='Game', columns='Player', values='NewRating', aggfunc='last')
+            available_players = [p for p in selected_players if p in chart_data.columns]
+            chart_data = chart_data[available_players]
+            
+            start_row = pd.DataFrame({p: [INITIAL_RATING] for p in available_players}, index=["開始"])
+            chart_data = pd.concat([start_row, chart_data]).reindex(game_order).ffill()
+            
+            # Altair描画用にデータを変形
+            df_chart = chart_data.reset_index().melt(id_vars='index', var_name='Player', value_name='Rating')
+            df_chart = df_chart.rename(columns={'index': 'Game'})
+            
+            # マウスオーバーした線をハイライトする設定
+            highlight = alt.selection_point(on='mouseover', fields=['Player'], nearest=True)
+            
+            # グラフの設定
+            chart = alt.Chart(df_chart).mark_line(point=True).encode(
+                x=alt.X('Game:O', sort=game_order, title="ゲーム (日付とラウンド)", axis=alt.Axis(labelAngle=-45)),
+                y=alt.Y('Rating:Q', scale=alt.Scale(zero=False), title="レート"),
+                color=alt.Color('Player:N', legend=alt.Legend(title="プレイヤー")),
+                # マウスオーバー時のみ線を太く、濃くする（他は薄くする）
+                opacity=alt.condition(highlight, alt.value(1.0), alt.value(0.2)),
+                size=alt.condition(highlight, alt.value(3), alt.value(1)),
+                tooltip=['Game', 'Player', alt.Tooltip('Rating:Q', format='.0f')]
+            ).add_params(highlight).interactive()
+            
+            st.altair_chart(chart, use_container_width=True)
             
     st.markdown("---")
 
