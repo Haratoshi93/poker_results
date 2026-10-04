@@ -84,8 +84,9 @@ else:
         return f"{rank}位"
 
     df_summary['ランク'] = (df_summary.index + 1).map(get_medal)
-    df_summary['Rating'] = df_summary['Rating'].round(1)
-    df_summary['HighestRating'] = df_summary['HighestRating'].round(1)
+    # 確実に小数点第1位まで表示されるようにフォーマット
+    df_summary['Rating'] = df_summary['Rating'].map(lambda x: f"{x:.1f}")
+    df_summary['HighestRating'] = df_summary['HighestRating'].map(lambda x: f"{x:.1f}")
     
     # 1画面に縦並びで表示
     st.subheader("🏆 総合レーティングランキング")
