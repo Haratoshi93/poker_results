@@ -172,7 +172,7 @@ else:
             
     st.markdown("---")
 
-    st.subheader("🔥 最新ゲーム分析")
+    st.subheader("🔥 最新ゲームの結果")
     if not df_history.empty:
         latest_date = df_history['Date'].iloc[-1]
         latest_round = df_history['Round'].iloc[-1]
@@ -184,13 +184,18 @@ else:
         cols = st.columns(len(top_gainers))
         for i, (_, row) in enumerate(top_gainers.iterrows()):
             with cols[i]:
-                st.metric(label=row['Player'], value=f"{int(round(row['NewRating']))}", delta=f"{int(round(row['DeltaRating']))}")
+                # レートであることが明確になるように「pt」を付与
+                st.metric(label=row['Player'], value=f"{int(round(row['NewRating']))} pt", delta=f"{int(round(row['DeltaRating']))} pt")
         
         show_cols = ['Player', 'FinalChips', 'ActualShare(%)', 'DeltaRating']
         disp = latest_game[show_cols].sort_values('DeltaRating', ascending=False).copy()
-        disp['ActualShare(%)'] = disp['ActualShare(%)'].round(1).astype(str) + "%"
-        disp['DeltaRating'] = disp['DeltaRating'].map(lambda x: f"📈 +{int(round(x))}" if x > 0 else (f"📉 {int(round(x))}" if x < 0 else "➖ 0"))
-        disp = disp.rename(columns={'Player': 'プレイヤー', 'FinalChips': '最終チップ', 'ActualShare(%)': 'チップ占有率', 'DeltaRating': 'レート変動'})
+        
+        # 単位を付けて混同を防ぎつつ、すべて文字列化することで表内の文字寄せ（左寄せ）を統一する
+        disp['FinalChips'] = disp['FinalChips'].astype(str) + " 枚"
+        disp['ActualShare(%)'] = disp['ActualShare(%)'].round(1).astype(str) + " %"
+        disp['DeltaRating'] = disp['DeltaRating'].map(lambda x: f"📈 +{int(round(x))} pt" if x > 0 else (f"📉 {int(round(x))} pt" if x < 0 else "➖ 0 pt"))
+        
+        disp = disp.rename(columns={'Player': 'プレイヤー', 'FinalChips': '獲得チップ', 'ActualShare(%)': 'チップシェア', 'DeltaRating': 'レート変動'})
         
         st.dataframe(
             disp, 
@@ -198,8 +203,8 @@ else:
             hide_index=True,
             column_config={
                 "プレイヤー": st.column_config.TextColumn("プレイヤー", width="medium"),
-                "最終チップ": st.column_config.NumberColumn("最終チップ", width="small"),
-                "チップ占有率": st.column_config.TextColumn("チップ占有率", width="small"),
+                "獲得チップ": st.column_config.TextColumn("獲得チップ", width="small"),
+                "チップシェア": st.column_config.TextColumn("チップシェア", width="small"),
                 "レート変動": st.column_config.TextColumn("レート変動", width="medium"),
             }
         )
