@@ -2,18 +2,29 @@ name: Keep Streamlit Awake
 
 on:
   schedule:
-    # 毎日 午前9時 (UTCの0時) と 午後9時 (UTCの12時) に実行してスリープを防止
-    - cron: '0 0,12 * * *'
-  workflow_dispatch: # 手動実行用
+    # 毎週月曜日に実行してスリープとActions停止を防止
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
 
 jobs:
-  ping-app:
+  keep-alive:
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: write
+      
     steps:
-      - name: Ping Streamlit App
+      - uses: actions/checkout@v3
+      
+      - name: Create dummy commit to keep actions and streamlit alive
         run: |
-          echo "Pinging Streamlit App to keep it awake..."
-          # 定期的にヘルスチェックURLを叩いてスリープを防止します
-          curl -sL -b /tmp/cookies.txt -c /tmp/cookies.txt https://haraibe-poker-results.streamlit.app/_stcore/health > /dev/null || true
-          echo "Done!"
+          # 日時をテキストに書き込んでファイルに変更を加える
+          echo "Last run: $(date)" > .github/keepalive.txt
+          
+          # Gitの設定
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # コミットとプッシュ（変更があれば）
+          git add .github/keepalive.txt
+          git commit -m "chore: keep-alive dummy commit" || exit 0
+          git push
