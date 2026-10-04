@@ -61,9 +61,11 @@ def load_and_calc_ratings():
     summary_data = []
     for player, rating in ratings.items():
         player_history = history_df[history_df['Player'] == player]
+        last_delta = player_history['DeltaRating'].iloc[-1] if not player_history.empty else 0
         summary_data.append({
             'Player': player,
             'Rating': rating,
+            'LastDelta': last_delta,
             'GamesPlayed': len(player_history),
             'HighestRating': player_history['NewRating'].max() if not player_history.empty else rating
         })
@@ -87,17 +89,32 @@ else:
     # 確実に小数点第1位まで表示されるようにフォーマット
     df_summary['Rating'] = df_summary['Rating'].map(lambda x: f"{x:.1f}")
     df_summary['HighestRating'] = df_summary['HighestRating'].map(lambda x: f"{x:.1f}")
+    # トレンド（直近の変動）を見やすくフォーマット
+    df_summary['LastDelta'] = df_summary['LastDelta'].map(lambda x: f"📈 +{x:.1f}" if x > 0 else (f"📉 {x:.1f}" if x < 0 else "➖ 0.0"))
     
     # 1画面に縦並びで表示
     st.subheader("🏆 総合レーティングランキング")
-    display_cols = ['ランク', 'Player', 'Rating', 'GamesPlayed', 'HighestRating']
+    display_cols = ['ランク', 'Player', 'Rating', 'LastDelta', 'GamesPlayed', 'HighestRating']
     rename_dict = {
         'Player': 'プレイヤー',
         'Rating': '現在のレート',
+        'LastDelta': '直近の変動',
         'GamesPlayed': '参加回数',
         'HighestRating': '過去最高レート'
     }
-    st.dataframe(df_summary[display_cols].rename(columns=rename_dict), width="stretch", hide_index=True)
+    st.dataframe(
+        df_summary[display_cols].rename(columns=rename_dict), 
+        width="stretch", 
+        hide_index=True,
+        column_config={
+            "ランク": st.column_config.TextColumn("ランク", width="small"),
+            "プレイヤー": st.column_config.TextColumn("プレイヤー", width="medium"),
+            "現在のレート": st.column_config.TextColumn("現在のレート", width="small"),
+            "直近の変動": st.column_config.TextColumn("直近の変動", width="small"),
+            "参加回数": st.column_config.NumberColumn("参加回数", width="small"),
+            "過去最高レート": st.column_config.TextColumn("過去最高レート", width="small"),
+        }
+    )
         
     st.markdown("---")
 
@@ -134,6 +151,17 @@ else:
         show_cols = ['Player', 'FinalChips', 'ActualShare(%)', 'DeltaRating']
         disp = latest_game[show_cols].sort_values('DeltaRating', ascending=False).copy()
         disp['ActualShare(%)'] = disp['ActualShare(%)'].round(1).astype(str) + "%"
-        disp['DeltaRating'] = disp['DeltaRating'].map(lambda x: f"UP ⬆️ +{x:.1f}" if x > 0 else f"DOWN ⬇️ {x:.1f}")
+        disp['DeltaRating'] = disp['DeltaRating'].map(lambda x: f"📈 +{x:.1f}" if x > 0 else (f"📉 {x:.1f}" if x < 0 else "➖ 0.0"))
         disp = disp.rename(columns={'Player': 'プレイヤー', 'FinalChips': '最終チップ', 'ActualShare(%)': 'チップ占有率', 'DeltaRating': 'レート変動'})
-        st.dataframe(disp, width="stretch", hide_index=True)
+        
+        st.dataframe(
+            disp, 
+            width="stretch", 
+            hide_index=True,
+            column_config={
+                "プレイヤー": st.column_config.TextColumn("プレイヤー", width="medium"),
+                "最終チップ": st.column_config.NumberColumn("最終チップ", width="small"),
+                "チップ占有率": st.column_config.TextColumn("チップ占有率", width="small"),
+                "レート変動": st.column_config.TextColumn("レート変動", width="medium"),
+            }
+        )
