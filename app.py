@@ -120,17 +120,28 @@ else:
 
     st.subheader("📈 レート推移")
     if not df_history.empty:
+        import altair as alt
         hist = df_history.copy()
-        hist['Game'] = hist['Date'].astype(str) + " R" + hist['Round'].astype(str)
-        game_order = list(dict.fromkeys(hist['Game']))
+        hist['Game'] = hist['Date'].astype(str) + " (R" + hist['Round'].astype(str) + ")"
+        game_order = ["開始"] + list(dict.fromkeys(hist['Game']))
+        
         chart_data = hist.pivot_table(index='Game', columns='Player', values='NewRating', aggfunc='last')
-        chart_data = chart_data.reindex(game_order)
         start_row = pd.DataFrame({p: [INITIAL_RATING] for p in chart_data.columns}, index=["開始"])
-        chart_data = pd.concat([start_row, chart_data]).ffill()
-        chart_data.index = range(len(chart_data))
-        chart_data.index.name = "通算ゲーム数"
-        st.line_chart(chart_data)
-        st.caption("横軸の対応: " + " / ".join(f"{i+1}={g}" for i, g in enumerate(game_order)))
+        chart_data = pd.concat([start_row, chart_data]).reindex(game_order).ffill()
+        
+        # Altair描画用にデータを変形
+        df_chart = chart_data.reset_index().melt(id_vars='index', var_name='Player', value_name='Rating')
+        df_chart = df_chart.rename(columns={'index': 'Game'})
+        
+        # グラフの設定（X軸をgame_orderの通りに強制ソート）
+        chart = alt.Chart(df_chart).mark_line(point=True).encode(
+            x=alt.X('Game:O', sort=game_order, title="ゲーム (日付とラウンド)", axis=alt.Axis(labelAngle=-45)),
+            y=alt.Y('Rating:Q', scale=alt.Scale(zero=False), title="レート"),
+            color=alt.Color('Player:N', legend=alt.Legend(title="プレイヤー")),
+            tooltip=['Game', 'Player', alt.Tooltip('Rating:Q', format='.0f')]
+        ).interactive()
+        
+        st.altair_chart(chart, use_container_width=True)
             
     st.markdown("---")
 
