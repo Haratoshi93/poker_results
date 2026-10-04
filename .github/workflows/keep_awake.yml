@@ -14,6 +14,6 @@ jobs:
       - name: Ping Streamlit App
         run: |
           echo "Pinging Streamlit App to keep it awake..."
-          # ★★★ 注意: 以下のURLは仮のものです。実際のアプリのURLに書き換えてください ★★★
-          curl -sL -b /tmp/cookies.txt -c /tmp/cookies.txt https://poker-results.streamlit.app/_stcore/health > /dev/null || true
+          # 定期的にヘルスチェックURLを叩いてスリープを防止します
+          curl -sL -b /tmp/cookies.txt -c /tmp/cookies.txt https://haraibe-poker-results.streamlit.app/_stcore/health > /dev/null || true
           echo "Done!"
