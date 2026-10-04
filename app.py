@@ -78,14 +78,17 @@ df_raw, df_history, df_summary = load_and_calc_ratings()
 if df_summary.empty:
     st.info("データがありません。")
 else:
-    # ランクメダルの付与
+    # ランクの計算（四捨五入した整数値で同点を判定）
+    # method='min' により、1位が2人いれば次は3位になります
+    df_summary['rank_num'] = df_summary['Rating'].round(0).rank(method='min', ascending=False).astype(int)
+    
     def get_medal(rank):
         if rank == 1: return "🥇"
         if rank == 2: return "🥈"
         if rank == 3: return "🥉"
         return f"{rank}位"
 
-    df_summary['ランク'] = (df_summary.index + 1).map(get_medal)
+    df_summary['ランク'] = df_summary['rank_num'].map(get_medal)
     # 整数（四捨五入）でスッキリ表示するようにフォーマット
     df_summary['Rating'] = df_summary['Rating'].map(lambda x: f"{int(round(x))}")
     df_summary['HighestRating'] = df_summary['HighestRating'].map(lambda x: f"{int(round(x))}")
