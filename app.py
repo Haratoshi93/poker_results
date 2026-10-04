@@ -87,60 +87,52 @@ else:
     df_summary['Rating'] = df_summary['Rating'].round(1)
     df_summary['HighestRating'] = df_summary['HighestRating'].round(1)
     
-    # スマホで見やすいようにタブで分割
-    tab1, tab2, tab3 = st.tabs(["🏆 ランキング", "📈 レート推移", "🔥 最新ゲーム分析"])
-    
-    with tab1:
-        st.subheader("総合レーティングランキング")
-        display_cols = ['ランク', 'Player', 'Rating', 'GamesPlayed', 'HighestRating']
-        rename_dict = {
-            'Player': 'プレイヤー',
-            'Rating': '現在のレート',
-            'GamesPlayed': '参加回数',
-            'HighestRating': '過去最高レート'
-        }
-        st.dataframe(df_summary[display_cols].rename(columns=rename_dict), width="stretch", hide_index=True)
+    # 1画面に縦並びで表示
+    st.subheader("🏆 総合レーティングランキング")
+    display_cols = ['ランク', 'Player', 'Rating', 'GamesPlayed', 'HighestRating']
+    rename_dict = {
+        'Player': 'プレイヤー',
+        'Rating': '現在のレート',
+        'GamesPlayed': '参加回数',
+        'HighestRating': '過去最高レート'
+    }
+    st.dataframe(df_summary[display_cols].rename(columns=rename_dict), width="stretch", hide_index=True)
         
-    with tab2:
-        st.subheader("プレイヤーのレート推移")
-        if not df_history.empty:
-            # 横軸を「実際のゲーム（日付+ラウンド）」で揃える
-            # （途中参加や欠席の人がいても線がずれないようにするため）
-            hist = df_history.copy()
-            hist['Game'] = hist['Date'].astype(str) + " R" + hist['Round'].astype(str)
-            game_order = list(dict.fromkeys(hist['Game']))
-            chart_data = hist.pivot_table(index='Game', columns='Player', values='NewRating', aggfunc='last')
-            chart_data = chart_data.reindex(game_order)
-            # 開始地点（全員1000）を先頭に追加し、欠席回は直前のレートを引き継ぐ
-            start_row = pd.DataFrame({p: [INITIAL_RATING] for p in chart_data.columns}, index=["開始"])
-            chart_data = pd.concat([start_row, chart_data]).ffill()
-            # 横軸は「通算ゲーム数」（0=開始, 1=1戦目...）。文字列だと順番が崩れるため数字にする
-            chart_data.index = range(len(chart_data))
-            chart_data.index.name = "通算ゲーム数"
-            st.line_chart(chart_data)
-            st.caption("横軸の対応: " + " / ".join(f"{i+1}={g}" for i, g in enumerate(game_order)))
+    st.markdown("---")
+
+    st.subheader("📈 レート推移")
+    if not df_history.empty:
+        hist = df_history.copy()
+        hist['Game'] = hist['Date'].astype(str) + " R" + hist['Round'].astype(str)
+        game_order = list(dict.fromkeys(hist['Game']))
+        chart_data = hist.pivot_table(index='Game', columns='Player', values='NewRating', aggfunc='last')
+        chart_data = chart_data.reindex(game_order)
+        start_row = pd.DataFrame({p: [INITIAL_RATING] for p in chart_data.columns}, index=["開始"])
+        chart_data = pd.concat([start_row, chart_data]).ffill()
+        chart_data.index = range(len(chart_data))
+        chart_data.index.name = "通算ゲーム数"
+        st.line_chart(chart_data)
+        st.caption("横軸の対応: " + " / ".join(f"{i+1}={g}" for i, g in enumerate(game_order)))
             
-    with tab3:
-        st.subheader("最新ゲームの活躍度")
-        if not df_history.empty:
-            latest_date = df_history['Date'].iloc[-1]
-            latest_round = df_history['Round'].iloc[-1]
-            st.markdown(f"**最終プレイ: {latest_date} (Round {latest_round})**")
-            
-            latest_game = df_history[(df_history['Date'] == latest_date) & (df_history['Round'] == latest_round)]
-            
-            # メトリクスで目立たせる（最大3人）
-            top_gainers = latest_game.sort_values('DeltaRating', ascending=False).head(3)
-            cols = st.columns(len(top_gainers))
-            for i, (_, row) in enumerate(top_gainers.iterrows()):
-                with cols[i]:
-                    st.metric(label=row['Player'], value=f"{row['NewRating']:.1f}", delta=f"{row['DeltaRating']:.1f}")
-            
-            st.markdown("---")
-            show_cols = ['Player', 'FinalChips', 'ActualShare(%)', 'DeltaRating']
-            # 文字に変換する前に、数値のまま並べ替えておく（文字だと順番が崩れるため）
-            disp = latest_game[show_cols].sort_values('DeltaRating', ascending=False).copy()
-            disp['ActualShare(%)'] = disp['ActualShare(%)'].round(1).astype(str) + "%"
-            disp['DeltaRating'] = disp['DeltaRating'].map(lambda x: f"UP ⬆️ +{x:.1f}" if x > 0 else f"DOWN ⬇️ {x:.1f}")
-            disp = disp.rename(columns={'Player': 'プレイヤー', 'FinalChips': '最終チップ', 'ActualShare(%)': 'チップ占有率', 'DeltaRating': 'レート変動'})
-            st.dataframe(disp, width="stretch", hide_index=True)
+    st.markdown("---")
+
+    st.subheader("🔥 最新ゲーム分析")
+    if not df_history.empty:
+        latest_date = df_history['Date'].iloc[-1]
+        latest_round = df_history['Round'].iloc[-1]
+        st.markdown(f"**最終プレイ: {latest_date} (Round {latest_round})**")
+        
+        latest_game = df_history[(df_history['Date'] == latest_date) & (df_history['Round'] == latest_round)]
+        
+        top_gainers = latest_game.sort_values('DeltaRating', ascending=False).head(3)
+        cols = st.columns(len(top_gainers))
+        for i, (_, row) in enumerate(top_gainers.iterrows()):
+            with cols[i]:
+                st.metric(label=row['Player'], value=f"{row['NewRating']:.1f}", delta=f"{row['DeltaRating']:.1f}")
+        
+        show_cols = ['Player', 'FinalChips', 'ActualShare(%)', 'DeltaRating']
+        disp = latest_game[show_cols].sort_values('DeltaRating', ascending=False).copy()
+        disp['ActualShare(%)'] = disp['ActualShare(%)'].round(1).astype(str) + "%"
+        disp['DeltaRating'] = disp['DeltaRating'].map(lambda x: f"UP ⬆️ +{x:.1f}" if x > 0 else f"DOWN ⬇️ {x:.1f}")
+        disp = disp.rename(columns={'Player': 'プレイヤー', 'FinalChips': '最終チップ', 'ActualShare(%)': 'チップ占有率', 'DeltaRating': 'レート変動'})
+        st.dataframe(disp, width="stretch", hide_index=True)
