@@ -6,8 +6,14 @@ import os
 # スマホでも見やすい中央寄せレイアウト
 st.set_page_config(page_title="Poker Rating Dashboard", page_icon="♠️", layout="centered")
 
-st.title("♠️ Poker Rating Dashboard")
-st.markdown("戦績と強さ（レーティング）を可視化する公式ダッシュボードです。")
+st.title("♠️ Poker Rating")
+
+with st.expander("ℹ️ レーティングのルール（仕組み）", expanded=False):
+    st.markdown("""
+    - **初期スタート**: 全員 `1000 pt` からスタートします。
+    - **ポイントの増減**: 自分の現在のレートから「これくらいチップを稼げるはず」という期待値が計算され、実際の獲得チップがそれを上回ればプラスに、下回ればマイナスになります。
+    - **強者への勝利**: 自分よりレートが高い（格上の）人がいるゲームで勝ち残ると、より多くのポイントを奪うことができます。
+    """)
 
 DATA_FILE = "data/results.csv"
 INITIAL_RATING = 1000
@@ -97,13 +103,12 @@ else:
     
     # 1画面に縦並びで表示
     st.subheader("🏆 総合ランキング")
-    # スマホで横スクロールしないよう、過去最高レートなどは省いてスッキリさせる
-    display_cols = ['ランク', 'Player', 'Rating', 'LastDelta', 'GamesPlayed']
+    # スマホで見切れないよう、カラム数を極限まで減らす（4列）
+    display_cols = ['ランク', 'Player', 'Rating', 'LastDelta']
     rename_dict = {
         'Player': '名前',
         'Rating': 'レート',
-        'LastDelta': '前回比',
-        'GamesPlayed': '回数'
+        'LastDelta': '前回比'
     }
     st.dataframe(
         df_summary[display_cols].rename(columns=rename_dict), 
@@ -111,10 +116,9 @@ else:
         hide_index=True,
         column_config={
             "ランク": st.column_config.TextColumn("ランク", width="small"),
-            "名前": st.column_config.TextColumn("名前", width="small"),
+            "名前": st.column_config.TextColumn("名前", width="medium"),
             "レート": st.column_config.TextColumn("レート", width="small"),
             "前回比": st.column_config.TextColumn("前回比", width="small"),
-            "回数": st.column_config.NumberColumn("回数", width="small"),
         }
     )
         
@@ -186,25 +190,23 @@ else:
                 # レートであることが明確になるように「pt」を付与
                 st.metric(label=row['Player'], value=f"{int(round(row['NewRating']))} pt", delta=f"{int(round(row['DeltaRating']))} pt")
         
-        show_cols = ['Player', 'FinalChips', 'ActualShare(%)', 'DeltaRating']
+        show_cols = ['Player', 'FinalChips', 'DeltaRating']
         disp = latest_game[show_cols].sort_values('DeltaRating', ascending=False).copy()
         
         # 単位を付けて混同を防ぎつつ、すべて文字列化することで表内の文字寄せ（左寄せ）を統一する
         disp['FinalChips'] = disp['FinalChips'].astype(str) + " 枚"
-        disp['ActualShare(%)'] = disp['ActualShare(%)'].round(1).astype(str) + " %"
         disp['DeltaRating'] = disp['DeltaRating'].map(lambda x: f"📈 +{int(round(x))} pt" if x > 0 else (f"📉 {int(round(x))} pt" if x < 0 else "➖ 0 pt"))
         
-        # スマホ向けにヘッダー名を極力短くして横幅を節約する
-        disp = disp.rename(columns={'Player': '名前', 'FinalChips': 'チップ', 'ActualShare(%)': 'シェア', 'DeltaRating': '変動'})
+        # スマホ向けにヘッダー名を極力短くして横幅を節約する（3列に絞る）
+        disp = disp.rename(columns={'Player': '名前', 'FinalChips': 'チップ', 'DeltaRating': '変動'})
         
         st.dataframe(
             disp, 
             width="stretch", 
             hide_index=True,
             column_config={
-                "名前": st.column_config.TextColumn("名前", width="small"),
+                "名前": st.column_config.TextColumn("名前", width="medium"),
                 "チップ": st.column_config.TextColumn("チップ", width="small"),
-                "シェア": st.column_config.TextColumn("シェア", width="small"),
                 "変動": st.column_config.TextColumn("変動", width="small"),
             }
         )
