@@ -103,22 +103,18 @@ else:
     
     # 1画面に縦並びで表示
     st.subheader("🏆 総合ランキング")
-    # スマホで見切れないよう、カラム数を極限まで減らす（4列）
-    display_cols = ['ランク', 'Player', 'Rating', 'LastDelta']
-    rename_dict = {
-        'Player': '名前',
-        'Rating': 'レート',
-        'LastDelta': '前回比'
-    }
+    # スマホで絶対に見切れないよう、情報を結合して2列に集約する
+    disp_summary = df_summary.copy()
+    disp_summary['プレイヤー'] = disp_summary['ランク'] + " " + disp_summary['Player']
+    disp_summary['レート (前回比)'] = disp_summary['Rating'] + " pt (" + disp_summary['LastDelta'] + ")"
+    
     st.dataframe(
-        df_summary[display_cols].rename(columns=rename_dict), 
-        width="stretch", 
+        disp_summary[['プレイヤー', 'レート (前回比)']], 
+        use_container_width=True, 
         hide_index=True,
         column_config={
-            "ランク": st.column_config.TextColumn("ランク", width="small"),
-            "名前": st.column_config.TextColumn("名前", width="medium"),
-            "レート": st.column_config.TextColumn("レート", width="small"),
-            "前回比": st.column_config.TextColumn("前回比", width="small"),
+            "プレイヤー": st.column_config.TextColumn("プレイヤー", width="medium"),
+            "レート (前回比)": st.column_config.TextColumn("レート (前回比)", width="medium"),
         }
     )
         
@@ -131,11 +127,11 @@ else:
         # 全プレイヤーのリスト（ランキング順）
         all_players = df_summary['Player'].tolist()
         
-        # プレイヤー絞り込み機能（デフォルトは上位5名）
+        # プレイヤー絞り込み機能（デフォルトは空）
         selected_players = st.multiselect(
-            "グラフに表示するプレイヤーを選択（デフォルトは上位5名）",
+            "グラフに表示するプレイヤーを選択",
             options=all_players,
-            default=all_players[:5] if len(all_players) > 5 else all_players
+            default=[]
         )
         
         if not selected_players:
@@ -202,7 +198,7 @@ else:
         
         st.dataframe(
             disp, 
-            width="stretch", 
+            use_container_width=True, 
             hide_index=True,
             column_config={
                 "名前": st.column_config.TextColumn("名前", width="medium"),
