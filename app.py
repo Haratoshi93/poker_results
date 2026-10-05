@@ -96,14 +96,14 @@ else:
     df_summary['LastDelta'] = df_summary['LastDelta'].map(lambda x: f"📈 +{int(round(x))}" if x > 0 else (f"📉 {int(round(x))}" if x < 0 else "➖ 0"))
     
     # 1画面に縦並びで表示
-    st.subheader("🏆 総合レーティングランキング")
-    display_cols = ['ランク', 'Player', 'Rating', 'LastDelta', 'GamesPlayed', 'HighestRating']
+    st.subheader("🏆 総合ランキング")
+    # スマホで横スクロールしないよう、過去最高レートなどは省いてスッキリさせる
+    display_cols = ['ランク', 'Player', 'Rating', 'LastDelta', 'GamesPlayed']
     rename_dict = {
-        'Player': 'プレイヤー',
-        'Rating': '現在のレート',
-        'LastDelta': '直近の変動',
-        'GamesPlayed': '参加回数',
-        'HighestRating': '過去最高レート'
+        'Player': '名前',
+        'Rating': 'レート',
+        'LastDelta': '前回比',
+        'GamesPlayed': '回数'
     }
     st.dataframe(
         df_summary[display_cols].rename(columns=rename_dict), 
@@ -111,11 +111,10 @@ else:
         hide_index=True,
         column_config={
             "ランク": st.column_config.TextColumn("ランク", width="small"),
-            "プレイヤー": st.column_config.TextColumn("プレイヤー", width="medium"),
-            "現在のレート": st.column_config.TextColumn("現在のレート", width="small"),
-            "直近の変動": st.column_config.TextColumn("直近の変動", width="small"),
-            "参加回数": st.column_config.NumberColumn("参加回数", width="small"),
-            "過去最高レート": st.column_config.TextColumn("過去最高レート", width="small"),
+            "名前": st.column_config.TextColumn("名前", width="small"),
+            "レート": st.column_config.TextColumn("レート", width="small"),
+            "前回比": st.column_config.TextColumn("前回比", width="small"),
+            "回数": st.column_config.NumberColumn("回数", width="small"),
         }
     )
         
@@ -195,16 +194,17 @@ else:
         disp['ActualShare(%)'] = disp['ActualShare(%)'].round(1).astype(str) + " %"
         disp['DeltaRating'] = disp['DeltaRating'].map(lambda x: f"📈 +{int(round(x))} pt" if x > 0 else (f"📉 {int(round(x))} pt" if x < 0 else "➖ 0 pt"))
         
-        disp = disp.rename(columns={'Player': 'プレイヤー', 'FinalChips': '獲得チップ', 'ActualShare(%)': 'チップシェア', 'DeltaRating': 'レート変動'})
+        # スマホ向けにヘッダー名を極力短くして横幅を節約する
+        disp = disp.rename(columns={'Player': '名前', 'FinalChips': 'チップ', 'ActualShare(%)': 'シェア', 'DeltaRating': '変動'})
         
         st.dataframe(
             disp, 
             width="stretch", 
             hide_index=True,
             column_config={
-                "プレイヤー": st.column_config.TextColumn("プレイヤー", width="medium"),
-                "獲得チップ": st.column_config.TextColumn("獲得チップ", width="small"),
-                "チップシェア": st.column_config.TextColumn("チップシェア", width="small"),
-                "レート変動": st.column_config.TextColumn("レート変動", width="medium"),
+                "名前": st.column_config.TextColumn("名前", width="small"),
+                "チップ": st.column_config.TextColumn("チップ", width="small"),
+                "シェア": st.column_config.TextColumn("シェア", width="small"),
+                "変動": st.column_config.TextColumn("変動", width="small"),
             }
         )
