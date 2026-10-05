@@ -165,7 +165,7 @@ else:
                 opacity=alt.condition(highlight, alt.value(1.0), alt.value(0.2)),
                 size=alt.condition(highlight, alt.value(3), alt.value(1)),
                 tooltip=['Game', 'Player', alt.Tooltip('Rating:Q', format='.0f')]
-            ).add_params(highlight).interactive()
+            ).add_params(highlight)
             
             st.altair_chart(chart, use_container_width=True)
             
