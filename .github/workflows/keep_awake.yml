@@ -6,8 +6,8 @@ name: Keep Streamlit Awake
 
 on:
   schedule:
-    # Every 6 hours (UTC). Shorter than the 12-hour sleep threshold.
-    - cron: '0 */6 * * *'
+    # Every 3 hours (UTC). Shorter than the 12-hour sleep threshold.
+    - cron: '0 */3 * * *'
     # Once a month: small commit so GitHub does not disable this schedule after 60 days of no activity.
     - cron: '0 3 1 * *'
   workflow_dispatch:
@@ -39,15 +39,20 @@ jobs:
           with sync_playwright() as p:
               browser = p.chromium.launch()
               page = browser.new_page()
-              page.goto(url, timeout=60000)
-              page.wait_for_timeout(8000)
-              button = page.get_by_role("button", name="Yes, get this app back up!")
-              if button.count() > 0:
-                  print("App was sleeping. Clicking wake-up button...")
-                  button.first.click()
-                  page.wait_for_timeout(60000)
-              else:
-                  print("App is awake.")
+              
+              print("Waiting for page load or sleep button to appear...")
+              try:
+                  page.goto(url, wait_until='networkidle', timeout=60000)
+                  button = page.locator("button:has-text('Yes, get this app back up')")
+                  button.wait_for(state="visible", timeout=60000)
+                  if button.is_visible():
+                      print("App was sleeping. Clicking wake-up button...")
+                      button.first.click()
+                      page.wait_for_timeout(60000)
+                      print("Wake-up button clicked.")
+              except Exception as e:
+                  print("Sleep button not found. App is likely awake.")
+                  
               browser.close()
           EOF
           python wake.py
