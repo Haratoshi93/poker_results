@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <title>♠️ Poker Rating Dashboard</title>
+  <link rel="stylesheet" href="./assets/style.css">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">メインコンテンツへ移動</a>
+
+  <div class="page-shell">
+    <header class="poker-hero" aria-label="サイトヘッダー">
+      <video
+        id="hero-video"
+        class="poker-hero-video"
+        autoplay
+        loop
+        muted
+        playsinline
+        preload="metadata"
+        poster="./static/poker-hero-poster.jpg"
+        aria-hidden="true"
+      >
+        <source src="./static/poker-hero-bg.mp4" type="video/mp4">
+      </video>
+      <div class="poker-hero-overlay" aria-hidden="true"></div>
+      <div class="poker-hero-content">
+        <div class="poker-hero-top">
+          <h1 class="poker-hero-title">♠️ Poker Rating</h1>
+          <label class="poker-motion-toggle">
+            <input type="checkbox" id="motion-toggle" class="poker-motion-checkbox">
+            <span>静止画にする</span>
+          </label>
+        </div>
+        <div id="hero-meta" class="poker-hero-meta" aria-live="polite">
+          <span class="poker-hero-stat">データを読み込んでいます…</span>
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content" tabindex="-1">
+      <details class="rules-box">
+        <summary class="rules-summary">ℹ️ レーティングのルール（仕組み）</summary>
+        <div class="rules-body">
+          <ul>
+            <li>初期スタート: 全員 <code>1000 pt</code> からスタートします。</li>
+            <li>ポイントの増減: 自分の現在のレートから「これくらいチップを稼げるはず」という期待値が計算され、実際の獲得チップがそれを上回ればプラスに、下回ればマイナスになります。</li>
+            <li>強者への勝利: 自分よりレートが高い（格上の）人がいるゲームで勝ち残ると、より多くのポイントを奪うことができます。</li>
+          </ul>
+        </div>
+      </details>
+
+      <div id="error-banner" class="status-banner is-hidden" role="alert"></div>
+
+      <section class="panel" aria-labelledby="ranking-heading">
+        <h2 id="ranking-heading" class="section-heading">🏆 総合ランキング</h2>
+        <div tabindex="0" role="region" aria-labelledby="ranking-heading" class="table-wrapper">
+          <table class="data-table">
+            <caption class="visually-hidden">全プレイヤーの総合レーティング順位</caption>
+            <thead>
+              <tr>
+                <th scope="col">プレイヤー</th>
+                <th scope="col">レート (前回比)</th>
+              </tr>
+            </thead>
+            <tbody id="ranking-tbody">
+              <tr>
+                <td colspan="2" class="empty-cell">読み込み中…</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <hr class="gold-divider">
+
+      <section class="panel" aria-labelledby="chart-heading">
+        <div class="section-header-row">
+          <h2 id="chart-heading" class="section-heading">📈 レート推移</h2>
+          <div class="chart-actions">
+            <button type="button" id="select-top3-btn" class="chip-action-btn">上位3名</button>
+            <button type="button" id="clear-players-btn" class="chip-action-btn">クリア</button>
+          </div>
+        </div>
+        <div id="player-selector" class="player-selector" role="group" aria-label="グラフに表示するプレイヤーを選択"></div>
+        <div id="chart-container" class="chart-container">
+          <p id="chart-empty-msg" class="info-box">プレイヤーを選択してください。</p>
+          <div id="chart-svg-wrap" class="chart-svg-wrap is-hidden"></div>
+        </div>
+      </section>
+
+      <hr class="gold-divider">
+
+      <section class="panel" aria-labelledby="latest-heading">
+        <h2 id="latest-heading" class="section-heading">🔥 最新ゲームの結果</h2>
+        <p id="latest-meta-text" class="latest-meta-text"></p>
+        <div id="latest-metrics" class="metrics-grid"></div>
+        <div tabindex="0" role="region" aria-labelledby="latest-heading" class="table-wrapper">
+          <table class="data-table">
+            <caption class="visually-hidden">最新ラウンドの獲得チップとレート変動</caption>
+            <thead>
+              <tr>
+                <th scope="col">名前</th>
+                <th scope="col">チップ</th>
+                <th scope="col">変動</th>
+              </tr>
+            </thead>
+            <tbody id="latest-tbody">
+              <tr>
+                <td colspan="3" class="empty-cell">読み込み中…</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>Poker Rating Dashboard — Powered by GitHub Pages</p>
+    </footer>
+  </div>
+
+  <script src="./assets/app.js"></script>
+</body>
+</html>
