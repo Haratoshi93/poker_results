@@ -1,23 +1,17 @@
-import streamlit as st
-import pandas as pd
+import html
 import math
 import os
+
+import pandas as pd
+import streamlit as st
 
 # スマホでも見やすい中央寄せレイアウト
 st.set_page_config(page_title="Poker Rating Dashboard", page_icon="♠️", layout="centered")
 
-st.title("♠️ Poker Rating")
-
-with st.expander("ℹ️ レーティングのルール（仕組み）", expanded=False):
-    st.markdown("""
-    - **初期スタート**: 全員 `1000 pt` からスタートします。
-    - **ポイントの増減**: 自分の現在のレートから「これくらいチップを稼げるはず」という期待値が計算され、実際の獲得チップがそれを上回ればプラスに、下回ればマイナスになります。
-    - **強者への勝利**: 自分よりレートが高い（格上の）人がいるゲームで勝ち残ると、より多くのポイントを奪うことができます。
-    """)
-
 DATA_FILE = "data/results.csv"
 INITIAL_RATING = 1000
 K_FACTOR = 300
+
 
 @st.cache_data(ttl=5)
 def load_and_calc_ratings():
@@ -79,7 +73,194 @@ def load_and_calc_ratings():
     summary_df = pd.DataFrame(summary_data).sort_values('Rating', ascending=False).reset_index(drop=True)
     return df, history_df, summary_df
 
+
+def build_hero_summary_html(df_raw: pd.DataFrame, df_history: pd.DataFrame, df_summary: pd.DataFrame) -> str:
+    """ヒーローバナー内に表示する現在の1位と対戦実績バッジのHTMLを組み立てる。"""
+    if df_summary.empty or df_raw.empty:
+        return '<p class="poker-hero-sub">Poker Rating Dashboard — 対戦データを読み込むと最新順位が表示されます</p>'
+
+    rounded_ratings = df_summary['Rating'].round(0)
+    top_score = int(rounded_ratings.max())
+    top_players = df_summary.loc[rounded_ratings == top_score, 'Player'].tolist()
+    top_names = "・".join(html.escape(str(name)) for name in top_players)
+    total_rounds = int(df_raw[['Date', 'Round']].drop_duplicates().shape[0])
+    latest_date = html.escape(str(df_history['Date'].iloc[-1])) if not df_history.empty else "-"
+
+    return (
+        f'<div class="poker-hero-meta">'
+        f'<span class="poker-hero-badge">👑 現在の1位: {top_names} ({top_score} pt)</span>'
+        f'<span class="poker-hero-stat">全 {total_rounds} ラウンド / 最終プレイ {latest_date}</span>'
+        f'</div>'
+    )
+
+
 df_raw, df_history, df_summary = load_and_calc_ratings()
+hero_meta_html = build_hero_summary_html(df_raw, df_history, df_summary)
+
+st.markdown(
+    f"""
+<style>
+:root {{
+  --in-oklab: ;
+}}
+@supports (background: linear-gradient(in oklab, white, black)) {{
+  :root {{
+    --in-oklab: in oklab;
+  }}
+}}
+.poker-hero {{
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  background: #0B1310 url("app/static/poker-hero-poster.jpg") center / cover no-repeat;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45), 0 16px 36px rgba(0, 0, 0, 0.6);
+  margin-bottom: 1rem;
+  padding: 1.75rem 1.4rem 1.45rem;
+}}
+.poker-hero-video {{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  z-index: 0;
+}}
+.poker-hero-overlay {{
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(to bottom var(--in-oklab), rgba(8, 16, 13, 0.45), rgba(8, 16, 13, 0.85));
+}}
+.poker-hero-content {{
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}}
+.poker-hero-top {{
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}}
+.poker-hero-title {{
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: clamp(1.55rem, 4.5vw, 2.2rem) !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  color: #F3EFE6 !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75);
+}}
+.poker-motion-toggle {{
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 28px;
+  min-width: 28px;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(11, 19, 16, 0.72);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  color: #F3EFE6;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}}
+.poker-motion-checkbox {{
+  accent-color: #D4AF37;
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  cursor: pointer;
+}}
+.poker-motion-toggle:has(.poker-motion-checkbox:focus-visible) {{
+  outline: 2px solid #D4AF37;
+  outline-offset: 2px;
+}}
+.poker-hero:has(.poker-motion-checkbox:checked) .poker-hero-video {{
+  display: none;
+}}
+@media (prefers-reduced-motion: reduce) {{
+  .poker-hero-video {{
+    display: none !important;
+  }}
+  .poker-motion-toggle {{
+    display: none;
+  }}
+}}
+.poker-hero-meta {{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.85rem;
+}}
+.poker-hero-badge {{
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(212, 175, 55, 0.16);
+  border: 1px solid rgba(212, 175, 55, 0.55);
+  color: #F6DF91;
+  font-size: 0.88rem;
+  font-weight: 600;
+}}
+.poker-hero-stat {{
+  color: #D6D1C4;
+  font-size: 0.84rem;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.75);
+}}
+.poker-hero-sub {{
+  margin: 0;
+  color: #D6D1C4;
+  font-size: 0.9rem;
+}}
+[data-testid="stMetric"] {{
+  background-color: #13221C;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+}}
+hr {{
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(212, 175, 55, 0.45), transparent);
+  margin: 1.5rem 0;
+}}
+</style>
+<div class="poker-hero">
+<video class="poker-hero-video" autoplay loop muted playsinline preload="metadata" poster="app/static/poker-hero-poster.jpg" aria-hidden="true">
+<source src="app/static/poker-hero-bg.mp4" type="video/mp4">
+</video>
+<div class="poker-hero-overlay" aria-hidden="true"></div>
+<div class="poker-hero-content">
+<div class="poker-hero-top">
+<h1 class="poker-hero-title">♠️ Poker Rating</h1>
+<label class="poker-motion-toggle">
+<input type="checkbox" class="poker-motion-checkbox">
+<span>静止画にする</span>
+</label>
+</div>
+{hero_meta_html}
+</div>
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
+with st.expander("ℹ️ レーティングのルール（仕組み）", expanded=False):
+    st.markdown("""
+    - **初期スタート**: 全員 `1000 pt` からスタートします。
+    - **ポイントの増減**: 自分の現在のレートから「これくらいチップを稼げるはず」という期待値が計算され、実際の獲得チップがそれを上回ればプラスに、下回ればマイナスになります。
+    - **強者への勝利**: 自分よりレートが高い（格上の）人がいるゲームで勝ち残ると、より多くのポイントを奪うことができます。
+    """)
 
 if df_summary.empty:
     st.info("データがありません。")
@@ -157,15 +338,22 @@ else:
             highlight = alt.selection_point(on='mouseover', fields=['Player'], nearest=True)
             
             # グラフの設定
-            chart = alt.Chart(df_chart).mark_line(point=True).encode(
-                x=alt.X('Game:O', sort=game_order, title="ゲーム (日付とラウンド)", axis=alt.Axis(labelAngle=-45)),
-                y=alt.Y('Rating:Q', scale=alt.Scale(zero=False), title="レート"),
-                color=alt.Color('Player:N', legend=alt.Legend(title="プレイヤー")),
-                # マウスオーバー時のみ線を太く、濃くする（他は薄くする）
-                opacity=alt.condition(highlight, alt.value(1.0), alt.value(0.2)),
-                size=alt.condition(highlight, alt.value(3), alt.value(1)),
-                tooltip=['Game', 'Player', alt.Tooltip('Rating:Q', format='.0f')]
-            ).add_params(highlight)
+            chart = (
+                alt.Chart(df_chart)
+                .mark_line(point=True)
+                .encode(
+                    x=alt.X('Game:O', sort=game_order, title="ゲーム (日付とラウンド)", axis=alt.Axis(labelAngle=-45)),
+                    y=alt.Y('Rating:Q', scale=alt.Scale(zero=False), title="レート"),
+                    color=alt.Color('Player:N', legend=alt.Legend(title="プレイヤー")),
+                    # マウスオーバー時のみ線を太く、濃くする（他は薄くする）
+                    opacity=alt.condition(highlight, alt.value(1.0), alt.value(0.2)),
+                    size=alt.condition(highlight, alt.value(3), alt.value(1)),
+                    tooltip=['Game', 'Player', alt.Tooltip('Rating:Q', format='.0f')]
+                )
+                .add_params(highlight)
+                .configure_view(strokeOpacity=0)
+                .properties(background="transparent")
+            )
             
             st.altair_chart(chart, use_container_width=True)
             
