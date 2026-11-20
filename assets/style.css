@@ -81,7 +81,7 @@ body {
   overflow: hidden;
   border-radius: 16px;
   border: 1px solid rgba(212, 175, 55, 0.45);
-  background: var(--bg-base) url("../static/poker-hero-poster.jpg?v=3") center / cover no-repeat;
+  background: var(--bg-base) url("../static/poker-hero-poster.jpg?v=4") center / cover no-repeat;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45), 0 16px 36px rgba(0, 0, 0, 0.6);
   margin-bottom: 1rem;
   padding: 1.8rem 1.4rem 1.45rem;
