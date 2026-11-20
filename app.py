@@ -113,7 +113,7 @@ st.markdown(
   overflow: hidden;
   border-radius: 16px;
   border: 1px solid rgba(212, 175, 55, 0.45);
-  background: #0B1310 url("app/static/poker-hero-poster.jpg?v=4") center / cover no-repeat;
+  background: #0B1310 url("app/static/poker-hero-poster.jpg?v=5") center / cover no-repeat;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45), 0 16px 36px rgba(0, 0, 0, 0.6);
   margin-bottom: 1rem;
   padding: 1.75rem 1.4rem 1.45rem;
@@ -236,8 +236,8 @@ hr {{
 }}
 </style>
 <div class="poker-hero">
-<video class="poker-hero-video" autoplay loop muted playsinline preload="metadata" poster="app/static/poker-hero-poster.jpg?v=4" aria-hidden="true">
-<source src="app/static/poker-hero-bg.mp4?v=4" type="video/mp4">
+<video class="poker-hero-video" autoplay loop muted playsinline preload="metadata" poster="app/static/poker-hero-poster.jpg?v=5" aria-hidden="true">
+<source src="app/static/poker-hero-bg.mp4?v=5" type="video/mp4">
 </video>
 <div class="poker-hero-overlay" aria-hidden="true"></div>
 <div class="poker-hero-content">
