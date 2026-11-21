@@ -523,22 +523,7 @@
     renderChart([], colorByPlayer, history, gameOrder);
   }
 
-  function setupMotionToggle() {
-    const toggle = document.getElementById("motion-toggle");
-    const video = document.getElementById("hero-video");
-    if (!toggle || !video) return;
-
-    toggle.addEventListener("change", () => {
-      if (toggle.checked) {
-        video.pause();
-      } else {
-        video.play().catch(() => {});
-      }
-    });
-  }
-
   async function init() {
-    setupMotionToggle();
     try {
       const resp = await fetch(DATA_URL, { cache: "no-cache" });
       if (!resp.ok) {

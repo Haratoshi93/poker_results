@@ -141,12 +141,6 @@ st.markdown(
   flex-direction: column;
   gap: 0.7rem;
 }}
-.poker-hero-top {{
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-}}
 .poker-hero-title {{
   margin: 0 !important;
   padding: 0 !important;
@@ -156,43 +150,9 @@ st.markdown(
   color: #F3EFE6 !important;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75);
 }}
-.poker-motion-toggle {{
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-height: 28px;
-  min-width: 28px;
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
-  background: rgba(11, 19, 16, 0.72);
-  border: 1px solid rgba(212, 175, 55, 0.45);
-  color: #F3EFE6;
-  font-size: 0.75rem;
-  line-height: 1.2;
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-}}
-.poker-motion-checkbox {{
-  accent-color: #D4AF37;
-  width: 15px;
-  height: 15px;
-  margin: 0;
-  cursor: pointer;
-}}
-.poker-motion-toggle:has(.poker-motion-checkbox:focus-visible) {{
-  outline: 2px solid #D4AF37;
-  outline-offset: 2px;
-}}
-.poker-hero:has(.poker-motion-checkbox:checked) .poker-hero-video {{
-  display: none;
-}}
 @media (prefers-reduced-motion: reduce) {{
   .poker-hero-video {{
     display: none !important;
-  }}
-  .poker-motion-toggle {{
-    display: none;
   }}
 }}
 .poker-hero-meta {{
@@ -241,13 +201,7 @@ hr {{
 </video>
 <div class="poker-hero-overlay" aria-hidden="true"></div>
 <div class="poker-hero-content">
-<div class="poker-hero-top">
 <h1 class="poker-hero-title">♠️ Poker Rating</h1>
-<label class="poker-motion-toggle">
-<input type="checkbox" class="poker-motion-checkbox">
-<span>静止画にする</span>
-</label>
-</div>
 {hero_meta_html}
 </div>
 </div>
