@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <title>♠️ Poker Record — 記録入力</title>
+  <link rel="stylesheet" href="./assets/style.css">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">メインコンテンツへ移動</a>
+
+  <div class="page-shell">
+    <header class="record-header" aria-label="サイトヘッダー">
+      <div class="record-header-top">
+        <h1 class="record-title">♠️ 記録入力</h1>
+        <a href="./index.html" class="nav-pill-link">🏆 ランキングを見る</a>
+      </div>
+      <div class="record-header-meta">
+        <span id="connection-badge" class="status-pill status-pill-warn" role="status" aria-live="polite">
+          🔑 初回設定が必要です
+        </span>
+        <span id="latest-record-info" class="record-sub-info">最新データを読み込み中…</span>
+      </div>
+    </header>
+
+    <main id="main-content" tabindex="-1">
+      <div id="status-banner" class="status-banner is-hidden" role="status" aria-live="polite"></div>
+
+      <!-- 初回のみ行う接続設定（保存先GitHubへの書き込み鍵） -->
+      <details id="settings-box" class="rules-box settings-box">
+        <summary class="rules-summary">🔑 書き込み用の鍵（初回設定）</summary>
+        <div class="settings-body">
+          <p class="settings-desc">
+            ランキングへ自動反映するための「書き込み用の鍵（GitHubトークン）」をこのスマホに保存します。一度保存すれば次回からは入力不要です。
+          </p>
+          <form id="settings-form" action="#" method="post" aria-labelledby="settings-form-title" novalidate>
+            <h2 id="settings-form-title" class="visually-hidden">接続設定フォーム</h2>
+            <div class="form-field">
+              <label for="github-token" class="form-label">
+                書き込み用の鍵（トークン） <span class="required-mark" aria-hidden="true">*</span>
+              </label>
+              <span id="token-hint" class="field-hint">
+                このブラウザ内のみに保存され、外部には公開されません。
+              </span>
+              <div class="password-row">
+                <input
+                  type="password"
+                  id="github-token"
+                  name="github_token"
+                  class="form-input"
+                  autocomplete="current-password"
+                  autocorrect="off"
+                  autocapitalize="none"
+                  spellcheck="false"
+                  enterkeyhint="done"
+                  aria-describedby="token-hint"
+                  data-error="token-error"
+                  required
+                >
+                <button
+                  type="button"
+                  id="toggle-token-btn"
+                  class="secondary-btn toggle-visibility-btn"
+                  aria-pressed="false"
+                  aria-label="鍵の文字を表示"
+                >
+                  表示
+                </button>
+              </div>
+              <div id="token-error" class="field-error">
+                <span role="img" aria-label="エラー">❌</span> 書き込み用の鍵を入力してください。
+              </div>
+            </div>
+
+            <div class="settings-actions">
+              <button type="submit" id="save-token-btn" class="primary-btn">鍵を保存して接続確認</button>
+              <button type="button" id="clear-token-btn" class="danger-ghost-btn">保存済みの鍵を消す</button>
+            </div>
+          </form>
+        </div>
+      </details>
+
+      <!-- メインの記録入力フォーム -->
+      <form id="record-form" class="record-form" action="#" method="post" aria-labelledby="record-form-heading" novalidate>
+        <h2 id="record-form-heading" class="visually-hidden">ラウンド結果の記録フォーム</h2>
+
+        <fieldset class="form-panel">
+          <legend class="panel-legend">📅 ゲーム情報</legend>
+
+          <div class="form-field">
+            <label for="game-date" class="form-label">
+              日付 <span class="required-mark" aria-hidden="true">*</span>
+            </label>
+            <input
+              type="date"
+              id="game-date"
+              name="date"
+              class="form-input"
+              required
+              data-error="date-error"
+            >
+            <div id="date-error" class="field-error">
+              <span role="img" aria-label="エラー">❌</span> 日付を選択してください。
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-field">
+              <label for="game-round" class="form-label">
+                ラウンド <span class="required-mark" aria-hidden="true">*</span>
+              </label>
+              <span id="round-hint" class="field-hint">その日の何戦目か（自動提案）</span>
+              <input
+                type="text"
+                id="game-round"
+                name="round"
+                class="form-input"
+                inputmode="numeric"
+                pattern="[0-9]+"
+                enterkeyhint="next"
+                aria-describedby="round-hint"
+                data-error="round-error"
+                required
+              >
+              <div id="round-error" class="field-error">
+                <span role="img" aria-label="エラー">❌</span> 1以上の半角数字を入力してください。
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label for="total-chips" class="form-label">
+                総チップ数 <span class="required-mark" aria-hidden="true">*</span>
+              </label>
+              <span id="total-chips-hint" class="field-hint">そのラウンド全体のチップ合計</span>
+              <input
+                type="text"
+                id="total-chips"
+                name="total_game_chips"
+                class="form-input"
+                inputmode="numeric"
+                pattern="[0-9]+"
+                enterkeyhint="next"
+                aria-describedby="total-chips-hint"
+                data-error="total-chips-error"
+                required
+              >
+              <div id="total-chips-error" class="field-error">
+                <span role="img" aria-label="エラー">❌</span> 1以上の半角数字を入力してください。
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="form-panel">
+          <legend class="panel-legend">👥 参加メンバー選択</legend>
+          <p class="field-hint block-hint">このラウンドに参加した人をタップして選んでください。</p>
+
+          <div id="member-picker" class="player-selector" role="group" aria-label="参加メンバーを選択"></div>
+
+          <div class="member-tools">
+            <button type="button" id="select-last-members-btn" class="chip-action-btn">前回と同じメンバー</button>
+            <button type="button" id="clear-members-btn" class="chip-action-btn">全員解除</button>
+          </div>
+
+          <div class="add-member-row">
+            <div class="add-member-input-wrap">
+              <label for="new-player-name" class="form-label">新しいメンバーを追加</label>
+              <input
+                type="text"
+                id="new-player-name"
+                name="new_player_name"
+                class="form-input"
+                placeholder="例: たろう"
+                maxlength="40"
+                enterkeyhint="done"
+                aria-describedby="new-player-hint"
+              >
+              <span id="new-player-hint" class="field-hint">名前を入れて「追加」を押すと一覧に加わります。</span>
+            </div>
+            <button type="button" id="add-player-btn" class="secondary-btn add-member-btn">＋ 追加</button>
+          </div>
+        </fieldset>
+
+        <fieldset class="form-panel">
+          <legend class="panel-legend">🪙 最終チップ数</legend>
+          <p class="field-hint block-hint">飛んだ人（0枚）は 0 のままで大丈夫です。</p>
+
+          <div id="chips-list" class="chips-list">
+            <p class="info-box">上で参加メンバーを選んでください。</p>
+          </div>
+        </fieldset>
+
+        <div class="submit-section">
+          <button type="submit" id="submit-record-btn" class="primary-btn submit-btn">
+            このラウンドを記録して公開する
+          </button>
+        </div>
+      </form>
+    </main>
+
+    <footer class="site-footer">
+      <p>Poker Record — <a href="./index.html" class="footer-link">ランキング画面に戻る</a></p>
+    </footer>
+  </div>
+
+  <script src="./assets/record.js"></script>
+</body>
+</html>
